@@ -29,8 +29,9 @@
             border: 1px solid #00b4e6;
             color: #ffffff;
             padding: 5px;
-            width: 300px;
+            width: 480px; 
             font-family: monospace;
+            text-align: center;
         }
         #hud-core {
             width: 180px;
@@ -63,7 +64,7 @@
 
     <div class="config-panel">
         <label for="tunnel-url">MAINFRAME BRIDGE LINK: </label>
-        <input type="text" id="tunnel-url" placeholder="Paste ngrok URL here (e.g., https://xxx.ngrok-free.app)" onchange="saveTunnel()">
+        <input type="text" id="tunnel-url" placeholder="Paste full https://...ngrok-free.dev link here" oninput="saveTunnel()">
     </div>
 
     <div class="stats-panel">
@@ -79,14 +80,33 @@
     <div id="display-box">System Initialized. Set bridge link to establish core terminal configurations.</div>
 
     <script>
-        // Load saved tunnel URL from local browser memory storage if it exists
-        document.getElementById('tunnel-url').value = localStorage.getItem('jessica_tunnel') || '';
+        // FIXED: Explicit initialization check function to ensure pasted links run immediately on startup
+        function initTunnelField() {
+            const savedUrl = localStorage.getItem('jessica_tunnel');
+            const inputField = document.getElementById('tunnel-url');
+            
+            if (savedUrl) {
+                inputField.value = savedUrl;
+                document.getElementById('display-box').innerText = "Bridge parameters mapped successfully.";
+            } else {
+                // Set default value explicitly if nothing is in local storage yet so it doesn't fail silently
+                inputField.value = "https://ladybug-clique-plywood.ngrok-free.dev";
+                localStorage.setItem('jessica_tunnel', inputField.value);
+            }
+        }
+        
+        initTunnelField();
 
         function saveTunnel() {
             let url = document.getElementById('tunnel-url').value.trim();
-            if(url.endsWith('/')) url = url.slice(0, -1); // Trim tracking slashes
+            if(url.endsWith('/')) url = url.slice(0, -1); 
             localStorage.setItem('jessica_tunnel', url);
-            document.getElementById('display-box').innerText = "Bridge parameters mapped successfully.";
+            
+            if (url) {
+                document.getElementById('display-box').innerText = "Bridge parameters mapped successfully.";
+            } else {
+                document.getElementById('display-box').innerText = "System Initialized. Set bridge link to establish core terminal configurations.";
+            }
         }
 
         function getBackendURL() {
@@ -96,6 +116,8 @@
         // Real-Time Telemetry Pipeline Updates via proxy link
         setInterval(async () => {
             let base = getBackendURL();
+            if (!base) return;
+            
             try {
                 let res = await fetch(`${base}/api/telemetry`);
                 let data = await res.json();
