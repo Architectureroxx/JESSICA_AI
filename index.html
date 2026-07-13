@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>J.E.S.S.I.C.A. Quantum Interface Matrix</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
+        :root {
+            --hud-color: #ff1e1e; /* Defaults to Lockdown Red */
+            --hud-glow: rgba(255, 30, 30, 0.3);
+        }
+
         body {
             background-color: #04060c;
-            color: #00b4e6;
+            color: var(--hud-color);
             font-family: 'Courier New', monospace;
             display: flex;
             flex-direction: column;
@@ -20,100 +26,90 @@
             padding: 20px;
         }
 
-        /* --- UPPER STATUS ARRAY --- */
         .top-bar {
             display: flex;
             justify-content: center;
             gap: 30px;
-            border: 1px solid #00b4e6;
+            border: 1px solid var(--hud-color);
             padding: 8px 30px;
             border-radius: 6px;
             background: rgba(8, 14, 24, 0.8);
             font-size: 0.9em;
             margin-bottom: 20px;
-            z-index: 10;
         }
 
-        /* --- OPTICAL PERIMETER SCANNER CRADLE (UPPER RIGHT) --- */
         .camera-container {
             position: absolute;
             top: 20px;
             right: 20px;
             width: 140px;
             height: 105px;
-            border: 2px solid #00b4e6;
+            border: 2px solid var(--hud-color);
             background: #000;
             overflow: hidden;
             z-index: 100;
-            box-shadow: 0 0 10px rgba(0, 180, 230, 0.3);
+            box-shadow: 0 0 10px var(--hud-glow);
         }
         #webcam-feed {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* Mirror view like client.py */
-        }
-        .cam-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            border: 1px solid rgba(0, 180, 230, 0.4);
-            box-sizing: border-box;
-            pointer-events: none;
+            transform: scaleX(-1);
         }
 
-        /* --- CORE CENTRAL REVOLVING CORE MATRIX --- */
         .core-wrapper {
             flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         #hud-core {
-            width: 220px;
-            height: 220px;
-            border: 2px solid #00b4e6;
+            width: 180px;
+            height: 180px;
+            border: 2px solid var(--hud-color);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 30px rgba(0, 180, 230, 0.2);
+            box-shadow: 0 0 30px var(--hud-glow);
             position: relative;
-            cursor: pointer;
+            margin-bottom: 25px;
         }
-        #hud-core::before {
-            content: '';
-            position: absolute;
-            width: 85%;
-            height: 85%;
-            border: 2px dashed rgba(0, 180, 230, 0.6);
-            border-radius: 50%;
-            animation: spin-clockwise 20s linear infinite;
-        }
-        #hud-core::after {
-            content: '';
-            position: absolute;
-            width: 70%;
-            height: 70%;
-            border: 4px dotted #00b4e6;
-            border-radius: 50%;
-            animation: spin-counter 12s linear infinite;
-        }
-        #inner-core {
-            width: 20px;
-            height: 20px;
-            background-color: #ffffff;
-            border-radius: 50%;
-            z-index: 5;
-            box-shadow: 0 0 15px #ffffff;
+        #inner-core { width: 20px; height: 20px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 0 15px #ffffff;}
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            z-index: 10;
         }
 
-        /* --- LOWER DATA TERMINAL GRID --- */
+        #btn-talk, #btn-register {
+            background: #04060c;
+            border: 2px solid var(--hud-color);
+            color: #ffffff;
+            padding: 12px 25px;
+            font-size: 0.95em;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--hud-glow);
+            transition: all 0.3s ease;
+        }
+        #btn-register {
+            border-color: #00b4e6;
+            box-shadow: 0 0 15px rgba(0, 180, 230, 0.2);
+        }
+        #btn-talk:active { background: var(--hud-color); color: #04060c; }
+        #btn-register:active { background: #00b4e6; color: #04060c; }
+
         .console-panel {
             width: 100%;
             max-width: 900px;
             background: rgba(4, 8, 16, 0.9);
-            border: 1px solid #00b4e6;
+            border: 1px solid var(--hud-color);
             border-radius: 8px;
             padding: 15px 25px;
             box-sizing: border-box;
@@ -122,7 +118,7 @@
         .input-line {
             width: 100%;
             background: rgba(12, 22, 38, 0.6);
-            border: 1px solid #00b4e6;
+            border: 1px solid var(--hud-color);
             border-radius: 4px;
             color: #d7ebfa;
             font-family: 'Courier New', monospace;
@@ -132,16 +128,11 @@
             margin-bottom: 15px;
             outline: none;
         }
-        .input-line::placeholder { color: rgba(0, 180, 230, 0.4); }
-        .input-line:focus { background: rgba(12, 22, 38, 0.9); box-shadow: 0 0 10px rgba(0, 180, 230, 0.3); }
 
-        .matrix-logs { font-size: 0.95em; line-height: 1.6em; }
+        .matrix-logs { font-size: 0.95em; line-height: 1.6em; color: #d7ebfa; }
         .log-row { margin-bottom: 4px; }
-        .highlight-blue { color: #00b4e6; font-weight: bold; }
-        .highlight-white { color: #d7ebfa; }
-
-        @keyframes spin-clockwise { 100% { transform: rotate(360deg); } }
-        @keyframes spin-counter { 100% { transform: rotate(-360deg); } }
+        .label-tag { color: var(--hud-color); font-weight: bold; }
+        #display-box { color: #ffffff; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -153,12 +144,13 @@
 
     <div class="camera-container">
         <video id="webcam-feed" autoplay playsinline muted></video>
-        <div class="cam-overlay"></div>
     </div>
 
     <div class="core-wrapper">
-        <div id="hud-core" onclick="startVoiceRecognition()">
-            <div id="inner-core"></div>
+        <div id="hud-core"><div id="inner-core"></div></div>
+        <div class="action-buttons">
+            <button id="btn-talk" onclick="startVoiceRecognition()">INITIALIZE VOCAL LINK</button>
+            <button id="btn-register" onclick="registerCurrentFace()">REGISTER FACE ID</button>
         </div>
     </div>
 
@@ -166,32 +158,133 @@
         <input type="text" id="terminal-input" class="input-line" placeholder="Type something to know... [Hit Enter]" autocomplete="off">
         
         <div class="matrix-logs">
-            <div class="log-row"><span class="highlight-blue">ACCESS LAYER:</span> BLUE</div>
-            <div class="log-row"><span class="highlight-blue">TARGET USER ID:</span> UTKRISHT VERMA [MASTER ACCESS]</div>
-            <div class="log-row"><span class="highlight-blue">PERIMETER EXTRACTION:</span> LIVENESS TRACKING REVERIFIED // CORE SECURITY LAYER STABLE</div>
-            <div id="display-box" class="log-row highlight-white">Calibrating monitor frame buffers...</div>
+            <div class="log-row"><span class="label-tag">ACCESS LAYER:</span> <span id="layer-val">LOCKDOWN</span></div>
+            <div class="log-row"><span class="label-tag">TARGET USER ID:</span> <span id="user-val">TERMINAL LOCKOUT ENFORCED</span></div>
+            <div class="log-row"><span class="label-tag">PERIMETER EXTRACTION:</span> <span id="perimeter-val">INITIALIZING RECOGNITION MATRICES...</span></div>
+            <div id="display-box" class="log-row">Loading Neural Networking Architecture Nodes...</div>
         </div>
     </div>
 
     <script>
         const BASE_URL = window.location.origin;
+        let currentSecurityLayer = "lockdown";
+        let yellowQueryCounter = 0;
+        let savedFaceDescriptor = null;
+        let modelsLoaded = false;
 
-        // Establish Front Optical Pipeline
-        async function setupOpticalScanner() {
-            const video = document.getElementById('webcam-feed');
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user" },
-                    audio: false
-                });
-                video.srcObject = stream;
-            } catch (err) {
-                console.error("Optical pipeline permission block:", err);
+        function applySecurityMatrixColors(layer) {
+            currentSecurityLayer = layer;
+            const root = document.documentElement;
+            
+            if (layer === "lockdown") {
+                root.style.setProperty('--hud-color', '#ff1e1e');
+                root.style.setProperty('--hud-glow', 'rgba(255, 30, 30, 0.3)');
+                document.getElementById('layer-val').innerText = "LOCKDOWN";
+                document.getElementById('user-val').innerText = "TERMINAL LOCKOUT ENFORCED // SAFE MODE";
+            } else if (layer === "blue") {
+                root.style.setProperty('--hud-color', '#00b4e6');
+                root.style.setProperty('--hud-glow', 'rgba(0, 180, 230, 0.3)');
+                document.getElementById('layer-val').innerText = "BLUE";
+                document.getElementById('user-val').innerText = "UTKRISHT VERMA [MASTER ACCESS]";
+            } else if (layer === "yellow") {
+                root.style.setProperty('--hud-color', '#ebb91e');
+                root.style.setProperty('--hud-glow', 'rgba(235, 185, 30, 0.3)');
+                document.getElementById('layer-val').innerText = "YELLOW";
+                document.getElementById('user-val').innerText = "VOCALLY VERIFIED PROXY SESSION";
             }
         }
-        setupOpticalScanner();
 
-        // Continuous Loop Tracking Hardware Parameters
+        // --- STEP A: LOAD MACHINE LEARNING MODELS FROM BACKEND ---
+        async function loadNeuralModels() {
+            try {
+                // Pointing directly to our FastAPI mounted static file folder path
+                await faceapi.nets.tinyFaceDetector.loadFromUri('/models_face');
+                await faceapi.nets.faceLandmark68Net.loadFromUri('/models_face');
+                await faceapi.nets.faceRecognitionNet.loadFromUri('/models_face');
+                modelsLoaded = true;
+                document.getElementById('display-box').innerText = "Neural matrices initialized. Scanning environment.";
+                
+                // Retrieve previously saved profile map from local storage arrays
+                const storedDesc = localStorage.getItem('jessica_face_id');
+                if (storedDesc) {
+                    savedFaceDescriptor = new Float32Array(JSON.parse(storedDesc));
+                    document.getElementById('perimeter-val').innerText = "FACE DATA LOADED. STANDING BY FOR MATCH SCAN...";
+                } else {
+                    document.getElementById('perimeter-val').innerText = "NO FACE PROFILE CONFIGURED. TAP REGISTER TO SCAN.";
+                }
+                
+                startOpticalScanningLoop();
+            } catch (err) {
+                document.getElementById('display-box').innerText = "Failed loading neural models: " + err;
+            }
+        }
+
+        // Establish Optical Stream
+        async function setupCamera() {
+            const video = document.getElementById('webcam-feed');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                video.srcObject = stream;
+                // Once stream hooks safely, initialize face networks execution structures
+                video.onloadedmetadata = () => { loadNeuralModels(); };
+            } catch (err) {
+                applySecurityMatrixColors("lockdown");
+                document.getElementById('display-box').innerText = "Camera access denied.";
+            }
+        }
+        setupCamera();
+
+        // --- STEP B: REGISTER CURRENT USER FACE ---
+        async function registerCurrentFace() {
+            if (!modelsLoaded) return;
+            document.getElementById('display-box').innerText = "Scanning facial structure metrics... Look straight at lens.";
+            const video = document.getElementById('webcam-feed');
+            
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                                           .withFaceLandmarks()
+                                           .withFaceDescriptor();
+            
+            if (detection) {
+                savedFaceDescriptor = detection.descriptor;
+                localStorage.setItem('jessica_face_id', JSON.stringify(Array.from(savedFaceDescriptor)));
+                document.getElementById('display-box').innerText = "Face ID configured successfully! Matrix locks calibrated.";
+                document.getElementById('perimeter-val').innerText = "FACE DATA SAVED SECURELY NATIVELY.";
+            } else {
+                document.getElementById('display-box').innerText = "Scan alignment failure. Reposition camera view.";
+            }
+        }
+
+        // --- STEP C: LIVE TRACKING ANALYSIS PROCESSING LOOP ---
+        function startOpticalScanningLoop() {
+            const video = document.getElementById('webcam-feed');
+            
+            setInterval(async () => {
+                if (!modelsLoaded || !savedFaceDescriptor || currentSecurityLayer === "yellow") return;
+                
+                const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                                               .withFaceLandmarks()
+                                               .withFaceDescriptor();
+                
+                if (detection) {
+                    // Compute spatial Euclidean distance vector validation
+                    const distance = faceapi.euclideanDistance(detection.descriptor, savedFaceDescriptor);
+                    
+                    // Standard threshold validation rule (less than 0.6 distance confirms identity)
+                    if (distance < 0.55) {
+                        applySecurityMatrixColors("blue");
+                        document.getElementById('perimeter-val').innerText = `MATCH LOCKED // STRUCTURAL VARIANCE: ${(100 - (distance*100)).toFixed(1)}%`;
+                    } else {
+                        applySecurityMatrixColors("lockdown");
+                        document.getElementById('perimeter-val').innerText = "UNKNOWN METRICS DETECTED // ACCESS PROHIBITED";
+                    }
+                } else {
+                    applySecurityMatrixColors("lockdown");
+                    document.getElementById('perimeter-val').innerText = "NO ENTITY LOCATED IN HUD SCAN VIEWPORT";
+                }
+            }, 600); // Continuous sampling loop
+        }
+
+        // Telemetry Update
         setInterval(async () => {
             try {
                 let res = await fetch(`${BASE_URL}/api/telemetry`);
@@ -201,41 +294,68 @@
             } catch(e) {}
         }, 1500);
 
-        // Terminal Submission Execution Block
-        document.getElementById('terminal-input').addEventListener('keydown', async function(e) {
+        // Input Keyboard Submission
+        document.getElementById('terminal-input').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 const commandText = this.value.trim();
                 if (!commandText) return;
-                
                 this.value = '';
-                document.getElementById('display-box').innerText = "Transmitting framework parameters...";
-                sendCommandToCore(commandText);
+                processInputSecurityRouting(commandText);
             }
         });
 
-        // High-Speed Voice Routing Engine Setup
         const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognizer = null;
         if (Recognition) {
             recognizer = new Recognition();
             recognizer.continuous = false;
             recognizer.lang = 'en-US';
-
             function startVoiceRecognition() {
-                document.getElementById('display-box').innerText = "Listening to vocal matrix frequencies...";
+                document.getElementById('display-box').innerText = "Listening...";
                 recognizer.start();
             }
-
-            recognizer.onresult = async (event) => {
+            recognizer.onresult = (event) => {
                 const spokenText = event.results[0][0].transcript;
-                document.getElementById('display-box').innerText = `Heard Vocal Stream: "${spokenText}"`;
-                sendCommandToCore(spokenText);
+                document.getElementById('display-box').innerText = `Heard: "${spokenText}"`;
+                processInputSecurityRouting(spokenText);
             };
-        } else {
-            document.getElementById('display-box').innerText = "Vocal hardware routing missing in current browser framework.";
         }
 
-        async function sendCommandToCore(text) {
+        function processInputSecurityRouting(text) {
+            let cleanText = text.toLowerCase().trim();
+
+            if (cleanText.includes("deactivate yellow") || cleanText.includes("cancel session")) {
+                yellowQueryCounter = 0;
+                applySecurityMatrixColors("lockdown");
+                executeSpeechOutput("Deactivating proxy parameters. Safe mode locked.");
+                return;
+            }
+
+            if (cleanText.includes("activate yellow")) {
+                yellowQueryCounter = 0;
+                applySecurityMatrixColors("yellow");
+                executeSpeechOutput("Lockdown overridden. Yellow segment active.");
+                return;
+            }
+
+            if (currentSecurityLayer === "lockdown") {
+                executeSpeechOutput("Request denied. Core face authentication missing.");
+                return;
+            }
+
+            if (currentSecurityLayer === "yellow") {
+                yellowQueryCounter++;
+                if (yellowQueryCounter > 5) {
+                    applySecurityMatrixColors("lockdown");
+                    executeSpeechOutput("Transaction limit reached. Forcing secure lockdown sequence.");
+                    return;
+                }
+            }
+
+            transmitTransactionToLaptop(text);
+        }
+
+        async function transmitTransactionToLaptop(text) {
             try {
                 let res = await fetch(`${BASE_URL}/api/command`, {
                     method: 'POST',
@@ -243,13 +363,16 @@
                     body: JSON.stringify({ command: text })
                 });
                 let data = await res.json();
-                document.getElementById('display-box').innerText = data.response;
-
-                const speech = new SpeechSynthesisUtterance(data.response);
-                window.speechSynthesis.speak(speech);
+                executeSpeechOutput(data.response);
             } catch(err) {
-                document.getElementById('display-box').innerText = "Transmission down. Connect local laptop server script node link.";
+                document.getElementById('display-box').innerText = "Uplink failure.";
             }
+        }
+
+        function executeSpeechOutput(phrase) {
+            document.getElementById('display-box').innerText = phrase;
+            const speech = new SpeechSynthesisUtterance(phrase);
+            window.speechSynthesis.speak(speech);
         }
     </script>
 </body>
