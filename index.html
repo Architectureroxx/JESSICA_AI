@@ -2,40 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>J.E.S.S.I.C.A. Quantum Interface Matrix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.E.S.S.I.C.A. Mobile Link</title>
     <style>
         body {
             background-color: #04060c;
             color: #00b4e6;
-            font-family: 'Courier New', monospace;
+            font-family: monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden;
-        }
-        .config-panel {
-            background: rgba(8, 14, 24, 0.9);
-            border: 1px dashed #ebb91e;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .config-panel input {
-            background: #04060c;
-            border: 1px solid #00b4e6;
-            color: #ffffff;
-            padding: 5px;
-            width: 480px; 
-            font-family: monospace;
-            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
         #hud-core {
-            width: 180px;
-            height: 180px;
+            width: 140px;
+            height: 140px;
             border: 3px solid #00b4e6;
             border-radius: 50%;
             display: flex;
@@ -43,92 +28,72 @@
             justify-content: center;
             box-shadow: 0 0 20px rgba(0, 180, 230, 0.4);
             animation: spin 12s linear infinite;
-            cursor: pointer;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
         }
-        #inner-core { width: 30px; height: 30px; background-color: #ffffff; border-radius: 50%; }
+        #inner-core { width: 25px; height: 25px; background-color: #ffffff; border-radius: 50%; }
         .stats-panel {
             background: rgba(8, 14, 24, 0.8);
             border: 1px solid #00b4e6;
-            padding: 15px 30px;
+            padding: 15px;
             border-radius: 6px;
             text-align: center;
-            min-width: 250px;
-            margin-bottom: 20px;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 40px;
         }
-        #display-box { color: #d7ebfa; font-size: 1.1em; max-width: 600px; text-align: center; height: 50px; }
+        #btn-talk {
+            background: #04060c;
+            border: 2px solid #ebb91e;
+            color: #ebb91e;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            font-family: monospace;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(235, 185, 30, 0.2);
+        }
+        #btn-talk:active { background: #ebb91e; color: #04060c; }
+        #display-box {
+            color: #d7ebfa;
+            font-size: 1.1em;
+            text-align: center;
+            margin-top: 30px;
+            max-width: 400px;
+            min-height: 60px;
+        }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="config-panel">
-        <label for="tunnel-url">MAINFRAME BRIDGE LINK: </label>
-        <input type="text" id="tunnel-url" placeholder="https://ladybug-clique-plywood.ngrok-free.dev" oninput="saveTunnel()">
-    </div>
-
     <div class="stats-panel">
-        <h3>SYSTEM TELEMETRY</h3>
-        <p>CPU WORKLOAD: <span id="cpu-val">OFFLINE</span></p>
-        <p>RAM ALLOCATION: <span id="ram-val">OFFLINE</span></p>
+        <h3>LAPTOP TELEMETRY</h3>
+        <p>CPU: <span id="cpu-val">...</span>%</p>
+        <p>RAM: <span id="ram-val">...</span>%</p>
     </div>
 
-    <div id="hud-core" onclick="startVoiceRecognition()">
-        <div id="inner-core"></div>
-    </div>
+    <div id="hud-core"><div id="inner-core"></div></div>
 
-    <div id="display-box">System Initialized. Set bridge link to establish core terminal configurations.</div>
+    <button id="btn-talk" onclick="startVoiceRecognition()">INITIALIZE VOCAL LINK</button>
+
+    <div id="display-box">Uplink established. Tap button to stream audio commands to your laptop.</div>
 
     <script>
-        // FIXED: Explicit initialization check function to ensure pasted links run immediately on startup
-        function initTunnelField() {
-            const savedUrl = localStorage.getItem('jessica_tunnel');
-            const inputField = document.getElementById('tunnel-url');
-            
-            if (savedUrl) {
-                inputField.value = savedUrl;
-                document.getElementById('display-box').innerText = "Bridge parameters mapped successfully.";
-            } else {
-                // Set default value explicitly if nothing is in local storage yet so it doesn't fail silently
-                inputField.value = "https://ladybug-clique-plywood.ngrok-free.dev";
-                localStorage.setItem('jessica_tunnel', inputField.value);
-            }
-        }
-        
-        initTunnelField();
+        // Automatically determine your laptop's IP address based on how you load the page
+        const BASE_URL = window.location.origin;
 
-        function saveTunnel() {
-            let url = document.getElementById('tunnel-url').value.trim();
-            if(url.endsWith('/')) url = url.slice(0, -1); 
-            localStorage.setItem('jessica_tunnel', url);
-            
-            if (url) {
-                document.getElementById('display-box').innerText = "Bridge parameters mapped successfully.";
-            } else {
-                document.getElementById('display-box').innerText = "System Initialized. Set bridge link to establish core terminal configurations.";
-            }
-        }
-
-        function getBackendURL() {
-            return localStorage.getItem('jessica_tunnel') || 'http://127.0.0.1:5000';
-        }
-
-        // Real-Time Telemetry Pipeline Updates via proxy link
+        // Telemetry Update Pipeline
         setInterval(async () => {
-            let base = getBackendURL();
-            if (!base) return;
-            
             try {
-                let res = await fetch(`${base}/api/telemetry`);
+                let res = await fetch(`${BASE_URL}/api/telemetry`);
                 let data = await res.json();
-                document.getElementById('cpu-val').innerText = data.cpu + '%';
-                document.getElementById('ram-val').innerText = data.ram + '%';
-            } catch(e) {
-                document.getElementById('cpu-val').innerText = 'OFFLINE';
-                document.getElementById('ram-val').innerText = 'OFFLINE';
-            }
+                document.getElementById('cpu-val').innerText = data.cpu;
+                document.getElementById('ram-val').innerText = data.ram;
+            } catch(e) {}
         }, 2000);
 
+        // Mobile Phone Web Speech Recognition Engine
         const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (Recognition) {
             const recognizer = new Recognition();
@@ -136,28 +101,28 @@
             recognizer.lang = 'en-US';
 
             function startVoiceRecognition() {
-                document.getElementById('display-box').innerText = "Listening to network vocals...";
+                document.getElementById('display-box').innerText = "Listening...";
                 recognizer.start();
             }
 
             recognizer.onresult = async (event) => {
-                const vocalCommand = event.results[0][0].transcript;
-                document.getElementById('display-box').innerText = `Heard: "${vocalCommand}"`;
-                
-                let base = getBackendURL();
+                const commandText = event.results[0][0].transcript;
+                document.getElementById('display-box').innerText = `Command: "${commandText}"`;
+
                 try {
-                    let res = await fetch(`${base}/api/command`, {
+                    let res = await fetch(`${BASE_URL}/api/command`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ command: vocalCommand })
+                        body: JSON.stringify({ command: commandText })
                     });
                     let data = await res.json();
                     document.getElementById('display-box').innerText = data.response;
 
+                    // Speak the result out loud natively on your phone's speaker
                     const speech = new SpeechSynthesisUtterance(data.response);
                     window.speechSynthesis.speak(speech);
                 } catch(err) {
-                    document.getElementById('display-box').innerText = "Communication failure. Is your local server running and the bridge active?";
+                    document.getElementById('display-box').innerText = "Mainframe transmission timeout error.";
                 }
             };
         }
