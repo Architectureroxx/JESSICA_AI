@@ -16,9 +16,8 @@ from pydantic import BaseModel
 import uvicorn
 import requests
 
-app = FastAPI(title="J.E.S.S.I.C.A. Mobile Uplink Core")
+app = FastAPI(title="J.E.S.S.I.C.A. Local Network Core Server")
 
-# Enable CORS so your phone's browser can safely talk to your laptop
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -82,7 +81,7 @@ def set_pc_master_volume(level: int):
 
 def scrape_local_weather_kanpur():
     try: return requests.get("https://wttr.in/Kanpur?format=%C+%t", timeout=3).text.strip()
-    except Exception: return "Weather offline."
+    except Exception: return "Offline Matrix."
 
 def telemetry_metrics_worker():
     global live_metrics
@@ -91,6 +90,10 @@ def telemetry_metrics_worker():
         live_metrics["ram"] = psutil.virtual_memory().percent
 
 threading.Thread(target=telemetry_metrics_worker, daemon=True).start()
+
+@app.get("/")
+def serve_mobile_dashboard():
+    return FileResponse("index.html")
 
 @app.get("/api/telemetry")
 def get_telemetry():
@@ -104,7 +107,7 @@ def process_command(payload: CommandPayload):
         return {"response": f"Kanpur atmospheric reading parameters: {scrape_local_weather_kanpur()}."}
 
     elif "youtube" in phrase_lower or "play" in phrase_lower:
-        video_query = re.sub(r'\b(jessica|play|search|for|on|youtube|song|bgm|track|video)\b', '', phrase_lower).strip()
+        video_query = re.sub(r'\b(jessica|play|search|for|on|youtube|song|video)\b', '', phrase_lower).strip()
         if not video_query: video_query = "lofi music"
         webbrowser.open(f"https://www.youtube.com/results?search_query={urllib.parse.quote(video_query)}")
         return {"response": f"Executing direct video playback pipeline on your laptop for {video_query}."}
@@ -113,7 +116,7 @@ def process_command(payload: CommandPayload):
         set_pc_master_volume(0)
         return {"response": "System sound channels fully attenuated."}
 
-    # Ollama Intelligence Layer Execution
+    # Intelligence execution fallback via local Ollama
     system_instruction = "You are J.E.S.S.I.C.A., an advanced offline AI matrix core. Respond in 1-2 sentences."
     try:
         history = pull_recent_db_chat_history(4)
@@ -125,12 +128,6 @@ def process_command(payload: CommandPayload):
         return {"response": generated_text}
     except Exception:
         return {"response": "Local intelligence core processing fault checked."}
-# NEW ROOT ROUTE: Serves the visual dashboard directly to your phone
-@app.get("/")
-def serve_mobile_dashboard():
-    # Make sure 'index.html' is saved in the exact same folder as your server.py file!
-    return FileResponse("index.html")
 
 if __name__ == "__main__":
-    # IMPORTANT: Binding to 0.0.0.0 lets devices on your local network connect
     uvicorn.run(app, host="0.0.0.0", port=5000)
