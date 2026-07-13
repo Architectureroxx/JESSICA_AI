@@ -12,6 +12,7 @@ import ollama
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
 import requests
@@ -128,6 +129,10 @@ def process_command(payload: CommandPayload):
         return {"response": generated_text}
     except Exception:
         return {"response": "Local intelligence core processing fault checked."}
+
+
+# Expose the models directory over the network to the phone browser
+app.mount("/models_face", StaticFiles(directory="models_face"), name="models_face")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000)
